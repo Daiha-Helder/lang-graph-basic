@@ -43,13 +43,15 @@ png_bytes = export_graph.get_graph().draw_mermaid_png(
 
 # 7 - Testando o Agente
 if __name__ == "__main__":
-    # result = export_graph.invoke(GraphState(input="Quem descobriu a América?",
-    #                                         output=""))
+    result = export_graph.invoke(GraphState(input="Quem descobriu a América?",
+                                            output=""))
     
-    # print(result)
+    print(result)
 
-    with open("./data/grafo_exemplo_1.png", "wb") as f:
-        f.write(png_bytes)
-
-    # 1 - Visualizar o grafo, primeira forma usando o site "mermaid.live
+   
+    # 1 - Visualizar o grafo - primeira forma, usando o site "mermaid.live para interpretar
     # print(export_graph.get_graph().draw_mermaid()) 
+
+    # 2 - Visualizar o grafo - segunda forma
+    with open("./data/grafo_exemplo_0.png", "wb") as f:
+        f.write(png_bytes)
