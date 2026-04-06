@@ -4,3 +4,5 @@ langchain
 python-dotenv
 ipykernel
 langchain-openai
+langgraph-cli
+langgraph-cli[inmem]
