@@ -1,11 +1,7 @@
 from typing_extensions import TypedDict
 from langgraph.graph import START, END, StateGraph
 from langchain_core.messages import SystemMessage, HumanMessage
-
-import sys
-from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parents[1]))
-from src.models import models
+from models import models
 
 # 1 - System Messages
 SYSTEM_MESSAGE_ASSISTANT = SystemMessage(
@@ -23,7 +19,7 @@ SYSTEM_MESSAGE_TECHNICIAN = SystemMessage(
 )
 
 SYSTEM_MESSAGE_HEALTH = SystemMessage(
-    content = """"
+    content = """
     Você é um consultor de saúde que fornece informações gerais sobre bem estar e saúde.
     Lembre-se de sempre enfatizar que suas resposta são apenas informativas e não substituem consultas médicas.
     """
@@ -106,7 +102,7 @@ workflow_builder.add_node("health", health)
 # Criando as arestas 
 workflow_builder.set_entry_point("router")
 
-workflow_builder.add_conditioal_edges(
+workflow_builder.add_conditional_edges(
     "router",
     lambda state: state['category'], {
         "assistant": "assistant",

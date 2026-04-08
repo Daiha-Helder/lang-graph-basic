@@ -1,6 +1,0 @@
-{
-    "dependencies":["."],
-    "graphs":{
-        "agent":"code.lab_3:export_graph"
-    }
-}
