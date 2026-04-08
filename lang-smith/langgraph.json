@@ -1,6 +1,0 @@
-{
-    "dependencies": ["."],
-    "graphs": {
-        "langgraph_assistant_router_test": "langgraph_assistent_router_test:workflow_router"
-    }
-}
