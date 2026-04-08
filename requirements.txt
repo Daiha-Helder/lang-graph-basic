@@ -6,3 +6,11 @@ ipykernel
 langchain-openai
 langgraph-cli
 langgraph-cli[inmem]
+langchain-core
+langchain-google-genai
+pydantic
+starlette
+uvicorn
+openai
+google-ai-generativelanguage
+
