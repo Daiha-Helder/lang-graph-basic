@@ -1,4 +1,4 @@
-import sys
+src/mcp_server.pyimport sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
