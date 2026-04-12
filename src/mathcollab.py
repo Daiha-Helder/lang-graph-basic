@@ -1,5 +1,6 @@
 import json
 from typing import TypedDict, List, Dict, Any
+from langgraph.graph import StateGraph, START, END
 import re
 
 # 1 - Estado Compartilhado
@@ -28,7 +29,7 @@ def planner_node(state: SimpleAgentState) -> Dict[str,str]:
         },
         {
             "task_id": "explain_result",
-            "specialist_type": "write",
+            "specialist_type": "writer",
             "description": f"Explique-me em linguagem simples o resultado do cálculo feito na tarefa 'do_math'"
 
         }
@@ -87,7 +88,7 @@ def writer_node(state: SimpleAgentState) -> Dict[str, str]:
     }
 
 # 2.5 - Coleta o resultado e avança no nó
-def collect_result_and_advance_node(state: SimpleAgentState) -> Dict[str, str]:
+def collect_and_advance_node(state: SimpleAgentState) -> Dict[str, str]:
     current_task_id = state.get("current_task_id")
     
     specialist_output = state.get(
@@ -96,7 +97,7 @@ def collect_result_and_advance_node(state: SimpleAgentState) -> Dict[str, str]:
     )
 
     updated_intermediate_results = state.get(
-        "intermediate_result",
+        "intermediate_results",
          {}
     ).copy()
 
@@ -108,13 +109,13 @@ def collect_result_and_advance_node(state: SimpleAgentState) -> Dict[str, str]:
         0) + 1
     
     return {
-        "intermediate_result": updated_intermediate_results,
+        "intermediate_results": updated_intermediate_results,
         "current_task_idx": new_idx,
         "specialist_result": None
     }
 
 # 2.6 - Sintetiza a informação
-def systhesis_node(state: SimpleAgentState) -> Dict[str, str | None]:
+def synthesize_node(state: SimpleAgentState) -> Dict[str, str | None]:
     original_query = state["original_query"]
 
     intermediate_results = state.get(
@@ -142,7 +143,7 @@ def should_execute_task_or_synthesize(state: SimpleAgentState) -> str:
     if current_task_idx < len(plan):
         return "prepare_next_task"
     else:
-        return "systhesize_response"
+        return "synthesize_response"
 
 # 2.8 - Roteia os nós
 def specialist_router_node(state: SimpleAgentState) -> str:
@@ -161,3 +162,57 @@ def error_node(state: SimpleAgentState) -> Dict[str, str | None]:
     return {
         "final_response": f"Ocorreu um erro: {error_message}"
     }
+
+# 3 - Construção do workflow
+workflow_builder = StateGraph(SimpleAgentState)
+
+
+# 3.1 - Construção dos nós
+workflow_builder.add_node("planner", planner_node)
+workflow_builder.add_node("prepare_next_task", prepare_next_task_node)
+workflow_builder.add_node("mathematician", mathematician_node)
+workflow_builder.add_node("writer", writer_node)
+workflow_builder.add_node("collect_and_advance", collect_and_advance_node)
+workflow_builder.add_node("synthesize_response", synthesize_node)
+workflow_builder.add_node("error_handler", error_node)
+
+# 3.2 Construção das arestas
+
+workflow_builder.set_entry_point("planner")
+
+workflow_builder.add_conditional_edges(
+    "planner",
+    should_execute_task_or_synthesize, {
+        "prepare_next_task": "prepare_next_task",
+        "synthesize_response":"synthesize_response",
+        "error_handler": "error_handler"
+    }
+)
+
+workflow_builder.add_conditional_edges(
+    "prepare_next_task",
+    specialist_router_node, {
+        "mathematician": "mathematician",
+        "writer":"writer",
+        "error_handler": "error_handler"
+    }
+)
+
+workflow_builder.add_edge("mathematician", "collect_and_advance")
+workflow_builder.add_edge("writer", "collect_and_advance")
+
+workflow_builder.add_conditional_edges(
+    "collect_and_advance",
+    should_execute_task_or_synthesize, {
+        "prepare_next_task": "prepare_next_task",
+        "synthesize_response":"synthesize_response",
+        "error_handler": "error_handler" 
+    }
+)
+
+workflow_builder.add_edge("synthesize_response", END)
+workflow_builder.add_edge("error_handler", END)
+
+simple_workflow = workflow_builder.compile()
+
+simple_workflow.get_graph().draw_png("workflow.png")
