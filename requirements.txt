@@ -18,3 +18,5 @@ google-ai-generativelanguage
 fastmcp
 firecrawl-py
 sympy
+tavily-python
+streamlit
