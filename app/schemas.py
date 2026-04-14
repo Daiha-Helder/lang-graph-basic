@@ -1,6 +1,9 @@
 from pydantic import BaseModel
 from typing import List
 
+class QueryList(BaseModel):
+    queries: List[str]
+
 class QueryResult(BaseModel):
     title: str = None
     url: str = None
