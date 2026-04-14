@@ -4,11 +4,13 @@ from langchain_openai import ChatOpenAI
 from langgraph.graph import START, END, StateGraph
 from langgraph.types import Send
 from tavily import TavilyClient
+import streamlit as st
 
 from schemas import *
 from prompts import *
 import os
 from dotenv import load_dotenv
+load_dotenv()
 
 OPEN_API_KEY = os.getenv("OPENAI_API_KEY")
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
@@ -26,10 +28,10 @@ reasoning_llm = ChatOpenAI(
 )
 
 
-llms = ChatOllama(
-    model="bjoernb/gemma4-e4b-fast",
-    temperature=0.5
-)
+# llms = ChatOllama(
+#     model="bjoernb/gemma4-e4b-fast",
+#     temperature=0.5
+# )
 
 # 2 - Construção dos nós
 def build_first_queries(state: ReportState):
@@ -92,7 +94,7 @@ def final_writer(state: ReportState):
         )
 
         llm_result = reasoning_llm.invoke(prompt)
-        final_response = llm_result.content + "\n\n\ References: \n" + references
+        final_response = llm_result.content + "\n\n References:\n" + references
         return {"final_response": final_response}
 
 # 3 - Construção do grafo 
@@ -103,7 +105,7 @@ builder.add_node("final_writer", final_writer)
 
 builder.add_edge(START, "build_first_queries")
 builder.add_conditional_edges(
-    "bulder_first_queries",
+    "build_first_queries",
     researcher,
     ["search_tavily"]
 )
@@ -115,9 +117,15 @@ graph.get_graph().draw_png("workflow_news.png")
 
 # Execução
 if __name__ == "__main__":
-    user_input = """
-        Quero que você explique-me o processo total para construir um agente de IA.
-    """
-    graph.invoke({
-        "user_input": user_input
-    })
+    st.title("App Langgraph")
+    user_input = st.text_input(
+        "Qual a sua pergunta?",
+        value="Explique-me o processo para construir um agente de IA"
+    )
+
+    if st.button("Pesquisa"):
+        with st.status("Gerando resposta"):
+            response = graph.invoke({
+                "user_input":user_input
+            })
+            st.write(response)
